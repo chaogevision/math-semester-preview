@@ -5,16 +5,21 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/install-skill-v020.yml"
+  pull_request_target:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
 
 jobs:
   install:
+    if: github.repository == 'chaogevision/math-semester-preview'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out main branch
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Rebuild, verify, and publish archive
         shell: bash
@@ -56,4 +61,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "feat: publish math semester preview skill v0.2.0"
-          git push
+          git push origin HEAD:main

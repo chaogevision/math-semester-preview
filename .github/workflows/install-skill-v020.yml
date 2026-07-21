@@ -1,0 +1,59 @@
+name: Install Skill v0.2.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/install-skill-v020.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Rebuild, verify, and publish archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .skill-upload/part-*.b64 | base64 -d > /tmp/skill-v0.2.0.zip
+          echo "2a51b6dc10c6aafdadd1f282bbb1b527034745e2d88763f7dd86d655f8a6a51e  /tmp/skill-v0.2.0.zip" | sha256sum -c -
+          rm -rf /tmp/skill-v020
+          mkdir -p /tmp/skill-v020
+          unzip -q /tmp/skill-v0.2.0.zip -d /tmp/skill-v020
+          test -f /tmp/skill-v020/math-semester-preview-site/SKILL.md
+          rsync -a /tmp/skill-v020/math-semester-preview-site/ ./
+          cat > .gitignore <<'EOF'
+          __pycache__/
+          *.py[cod]
+          .venv/
+          venv/
+          build/
+          dist/
+          work/
+          inspection/
+          *.zip
+          *.tar.gz
+          .DS_Store
+          Thumbs.db
+          .vscode/
+          .idea/
+          source/
+          *.pdf
+          EOF
+          rm -rf .skill-upload
+          rm -f .github/workflows/install-skill-v020.yml
+
+      - name: Commit published skill
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: publish math semester preview skill v0.2.0"
+          git push

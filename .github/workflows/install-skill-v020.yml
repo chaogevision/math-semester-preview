@@ -1,6 +1,7 @@
 name: Install Skill v0.2.0
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:

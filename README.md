@@ -1,113 +1,86 @@
-# math-semester-preview-site
+# math-semester-preview-site v0.2.0
 
-将一本小学数学教材 PDF 转换为一套离线互动预习网站：
+将一本小学数学教材 PDF 转换为一套基于 **“看—测—想—验—练—定”六步预习法** 的离线互动网站。
 
-- 一个学期总览页；
-- 每个单元一个独立 HTML；
-- 每单元 5-8 张知识卡；
-- 一条分步互动例题；
-- “认一认、说一说、用一用”三关挑战；
-- 教材页码来源、打印卡、家长核验报告；
-- 本地进度记录和绿/黄/红预习反馈。
+## 六步预习法
 
-## 这不是“一条超长提示词”
+1. **看全貌**：单元知识地图与 5—8 张知识卡；
+2. **测基础**：前置知识题 + 典型误解预测题；
+3. **想明白**：苏格拉底式分步引导、三级提示和自我解释；
+4. **验理解**：“认一认、说一说、用一用”三关挑战；
+5. **练迁移**：动态错因诊断 + 母题 + 换数字 + 换问法 + 换情境；
+6. **定重点**：汇总已会、未会、课堂重点、想问老师的问题和 1—3—7 复习计划。
 
-本技能将流程拆成两层：
+打印知识卡、错因卡、一题三变和完整成果单，是第六步的成果保存工具。
 
-1. **AI负责理解教材并生成结构化 JSON**；
-2. **固定脚本负责稳定生成和测试 HTML 网站**。
+## 仓库中的 v0.2.0 安装包
 
-这种结构比每次让模型从零编写整套网页更稳定，也更容易修改单个单元。
-
-## 安装
-
-### OpenAI Codex / ChatGPT desktop
-
-将整个 `math-semester-preview-site` 文件夹复制到以下任一位置：
-
-- 当前项目：`.agents/skills/math-semester-preview-site/`
-- 当前用户：`$HOME/.agents/skills/math-semester-preview-site/`
-
-随后在新会话中直接描述任务，或显式调用：
-
-```text
-$math-semester-preview-site 请处理我上传的数学教材 PDF，生成整学期互动预习网站。
-```
-
-### 其他支持 Agent Skills 的工具
-
-将完整文件夹放入该工具约定的 skills 目录。最低要求是工具能够读取 `SKILL.md`；完整运行还需要 Python 3、文件读写以及 PDF 阅读或渲染能力。
-
-### 不支持 Skills 的 Agent
-
-把 `references/agent-build-context.md` 的完整内容发给 Agent，要求它在当前项目中执行同一流程。
-
-## 快速使用
-
-1. 上传整本数学教材 PDF。
-2. 发送：
-
-```text
-请使用 math-semester-preview-site，把这本教材按单元制作成离线互动预习网站。自动识别目录；只有信息不确定时再集中问我一次。最终输出总览页、每单元网页、打印知识卡、来源报告和 ZIP。
-```
-
-3. Agent 将先创建工作目录、分析 PDF、生成内容 JSON，再运行构建与测试脚本。
-
-## 本地脚本流程
+完整 Skill v0.2.0 已以校验过的分片归档存放在 `.skill-upload/`。克隆仓库后运行：
 
 ```bash
-python scripts/init_project.py --project ./work
-python scripts/inspect_pdf.py ./book.pdf --out ./work/inspection --render-first 12
-# Agent 生成 ./work/content/book.json 和 ./work/content/units/*.json
-python scripts/run_pipeline.py \
-  --project ./work \
-  --out ./dist/math-preview-site \
-  --zip ./dist/math-preview-site.zip
+bash install-skill-v0.2.0.sh
 ```
 
-## 目录
+脚本会：
 
-```text
-math-semester-preview-site/
-├── SKILL.md
-├── agents/openai.yaml
-├── scripts/
-├── references/
-├── assets/
-├── examples/
-└── evals/
-```
+1. 合并 `.skill-upload/part-*.b64`；
+2. 还原 `math-semester-preview-site-skill-v0.2.0.zip`；
+3. 校验 SHA-256；
+4. 解压完整 `math-semester-preview-site/` Skill 目录到 `dist/`。
 
-## 示例
-
-`examples/fractions-demo/` 包含一个不附带教材扫描图的五年级“分数”示例数据，可用于测试网站生成器：
+也可以指定输出目录：
 
 ```bash
-python scripts/run_pipeline.py \
-  --project examples/fractions-demo \
-  --out /tmp/fractions-site \
-  --zip /tmp/fractions-site.zip
+bash install-skill-v0.2.0.sh /path/to/output
 ```
+
+归档 SHA-256：
+
+```text
+2a51b6dc10c6aafdadd1f282bbb1b527034745e2d88763f7dd86d655f8a6a51e
+```
+
+## 安装到 Agent
+
+把解压得到的 `math-semester-preview-site` 文件夹复制到：
+
+- 项目级：`.agents/skills/math-semester-preview-site/`
+- 用户级：`$HOME/.agents/skills/math-semester-preview-site/`
+
+随后调用：
+
+```text
+$math-semester-preview-site 请处理我上传的数学教材 PDF，按六步预习法生成整学期离线互动网站。
+```
+
+## 生成流程
+
+```text
+PDF
+  ↓
+教材规划 JSON
+  ↓
+单元六步内容 JSON
+  ↓
+结构与数学规则校验
+  ↓
+固定模板生成 HTML
+  ↓
+网站测试
+  ↓
+ZIP
+```
+
+AI 负责理解教材与生成结构化内容；固定脚本负责统一网页、交互、测试与打包。
 
 ## 重要限制
 
-- 数学教材中的几何图、统计图、分数图示不能只靠文字抽取判断，必须查看页面图像。
-- 扫描版 PDF 可能需要 Agent 的视觉读取能力；本技能不默认批量 OCR。
-- 离线 HTML 不能实时调用大模型。动态语音追问、无限生成新题等功能需要额外的 API 或 MCP 服务。
-- 最终数学内容仍应由家长或教师对照教材进行抽查，尤其是公式、图形和答案。
-- 默认不把整本教材页面嵌入网站，避免不必要的版权传播。
+- 几何图、统计图、分数涂色和辅助线必须查看 PDF 页面图像，不能只依赖文字抽取。
+- 离线 HTML 不会真正理解自由文本，也不会假装进行 AI 语义评分。
+- 动态语音追问、实时生成新题和云端同步需要额外 API 或 MCP 服务。
+- 最终数学内容仍应由家长或教师对照教材抽查。
+- 公开分享时不要附带整本教材扫描页或儿童个人信息。
 
 ## 许可
 
-MIT。详见 `LICENSE`。
-
-## GitHub 仓库维护
-
-本仓库附带：
-
-- `.github/workflows/validate.yml`：每次推送和 Pull Request 自动运行语法检查与烟雾测试；
-- `docs/`：可用于 GitHub Pages 的五年级分数示例站；
-- `PUBLISH_TO_GITHUB.md`：首次发布步骤；
-- `CHANGELOG.md`、`CONTRIBUTING.md` 和 `SECURITY.md`：版本、贡献及隐私说明。
-
-发布前请不要把教材原始 PDF、教材扫描页或儿童个人信息提交到公开仓库。
+MIT，见 `LICENSE.txt`。
